@@ -6,6 +6,7 @@ Officially Python 3.14 if you know what you are doing, but I suggest installing 
 
 ## How to use
 
+  * Clone the repository with `git clone https://github.com/Dtzibell/Pralign.git`
   * Export the primer database from LabGuru: Inventory $\rightarrow$ Primers $\rightarrow$ ... (Meatball menu) $\rightarrow$ Export Sequences.
   * Move the `.xslx` file to the project's top level directory (where the `pyproject.toml` is located).
   * Run `uv sync` once to download necessary python libraries
@@ -13,5 +14,5 @@ Officially Python 3.14 if you know what you are doing, but I suggest installing 
 
 The programme takes further optional arguments:
 
-  * `--reverse` or `-r`: reverse and make the complement of the input as the query. *(Since its annoying to make 5' $\rightarrow$ 3' copies in SnapGene)*
+  * `--reverse` or `-r`: reverse and make the complement of the input as the query. (Since its annoying to make 5' $\rightarrow$ 3' copies in SnapGene)
 
