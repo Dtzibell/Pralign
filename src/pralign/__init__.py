@@ -4,63 +4,28 @@ import parasail as ps
 import pathlib
 import argparse
 import re
-import requests as rq
+from .api import get_tm_batch_onetaq_stdbuf, get_tm_batch_phusion_hfbuf
 
 # DNA scoring matrix
 MATRIX = ps.matrix_create("ACGT", 1, -1)
 COMP = str.maketrans("ACGT", "TGCA")
 VALID_QUERY = re.compile("^[A|C|G|T]+$")
-# NEB exposes an API
-BASE_URI: str = "https://tmapi.neb.com"
-TYPE: str = "POST"
-CONTENT_TYPE: str = "application/json"
-
-
-def unnest(response: dict):
-    if isinstance(response, dict) and "data" in response.keys():
-        response = response["data"]
-    return response
-
-
-# prodcodes:
-# onetaq 2x std buf: onetaq-2
-# phusion with HF buf: phusion-0
-def get_batch_tm_onetaq_stdbuf(seqs: list[str]):
-    r = rq.post(
-        f"{BASE_URI}/tm/batch/",
-        json={
-            "seqpairs": [
-                [seq] for seq in seqs
-            ],  # seqpairs is a nested list, because it could take [seq1, seq2]
-            "conc": 0.5,
-            "prodcode": "onetaq-2",
-        },
-    )
-    return unnest(r.json())
-
-
-def get_batch_tm_phusion_hfbuf(seqs: list[str]):
-    r = rq.post(
-        f"{BASE_URI}/tm/batch/",
-        json={
-            "seqpairs": [[seq] for seq in seqs],
-            "conc": 0.5,
-            "prodcode": "phusion-0",
-        },
-    )
-    return unnest(r.json())
-
-
-def get_NEB_prodcodes():
-    r = rq.get(f"{BASE_URI}/docs/productcodes")
-    return r.text
 
 
 def reverse_and_complement(query: str) -> str:
+    """Makes a complement and reverses the given query sequence.
+    :param query: A query DNA sequence.
+    """
     return query.translate(COMP)[::-1]
 
 
+# TODO: would it not make sense to make gap_open infinity? Would avoid filtering down the line
 def align(query: str, seq: str, gap_open: int = 1) -> dict[str, int | str]:
+    """Performs Smith-Waterman on the given query and sequence.
+    :param query: DNA sequence 1.
+    :param seq: DNA sequence 2.
+    :param gap_open: penalty for opening and extending a gap.
+    """
     result = ps.sw_trace(query, seq, gap_open, gap_open, MATRIX)
     aligned_primer = result.traceback.ref
     return {"alignment score": result.score, "aligned portion": aligned_primer}
@@ -108,8 +73,12 @@ def main() -> None:
         )
     top: int = int(namespace.top)
     shortest: int = int(namespace.shortest)
+    if shortest < 2:
+        raise ArgumentError(
+            f'The argument "shortest" must be at least 2. Given {shortest}.'
+        )
     longest: int = int(namespace.longest)
-    output: str = namespace.output
+    output: str = namespace.output.strip()
 
     if namespace.reverse:
         query = reverse_and_complement(query)
@@ -143,20 +112,20 @@ def main() -> None:
                 ),
             )
             .alias("alignment")
-        )
-        .unnest("alignment")
+        )  # performs the alignment
+        .unnest("alignment")  # unnests the struct into two separate columns
         .filter(
             pl.col("aligned portion")
             .str.contains("-")
             .not_()
-            .and_(pl.col("alignment score") > 16)
-        )
+            .and_(pl.col("alignment score") > 15)
+        )  # filters out gapped and insufficient alignments. TODO: introduce a toml for params? Overkill?
         .sort(by="alignment score", descending=True)
         .with_columns(
             (pl.col("alignment score") / pl.col("sequence length")).alias(
                 "aligned proportion"
             )
-        )
+        )  # Computes the aligned proportion of the primer. Alignment score = alignment length because match score is 1.
         .sort(by="aligned proportion", descending=True)
         .head(top)
         .collect()
@@ -165,14 +134,14 @@ def main() -> None:
         "OneTaq Tm",
         [
             dct["tm1"]
-            for dct in get_batch_tm_onetaq_stdbuf(df["aligned portion"].to_list())
+            for dct in get_tm_batch_onetaq_stdbuf(df["aligned portion"].to_list())
         ],
     )
     phusion_tm = pl.Series(
         "Phusion Tm",
         [
             dct["tm1"]
-            for dct in get_batch_tm_phusion_hfbuf(df["aligned portion"].to_list())
+            for dct in get_tm_batch_phusion_hfbuf(df["aligned portion"].to_list())
         ],
     )
     df = df.with_columns(onetaq_tm, phusion_tm).drop("aligned portion")
