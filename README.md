@@ -14,7 +14,7 @@ Officially Python 3.14 if you know what you are doing, but I suggest installing 
   * Run `uv sync` once to download necessary python libraries
   * Run `uv run pralign ACTG`, where `ACTG` may be any DNA query that you want to find a primer for.
 
-The output is a file named `alignments.csv` which contains the name, the vial number, the sequence, the length of the sequence (`seq_len`) and the score (`align_score`) of the top 20 best scoring primers.
+The output is a file which contains the name, the vial number, the sequence, the length of the sequence, the score, the proportion of aligned primer and the Tm's for OneTaq 2x MM with Standard Buffer and Phusion with HF buffer PCR reactions.
 
 ## Optional arguments 
 
@@ -54,6 +54,7 @@ uv run pralign ACTG -o meaningfulAlignmentName1
 uv run pralign ACTG -n 10 -r \
 -o meaningfulReversedAlignmentName2WithN10
 ```
+
 The script is not well-tested. Reach out to me or your favourite AI assistant if something's unclear.
 
 Unfortunately SnapGene primer import is only available with the paid version and the documentation is poor, so I did not make the files importable.
