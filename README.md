@@ -1,5 +1,7 @@
 # Pralign
-LabGuru primer database searcher. Performs local alignment on a given query sequence against a primer database to find primers that could possibly fit the sequence.
+LabGuru primer database searcher. \
+Performs local alignment on a given query sequence against a primer database to find primers that could possibly fit the sequence. \
+The script is linked to the [NEB $T_{m}$ calculator](https://tmcalculator.neb.com/#!/main) via their [$T_{m}$ calculation API](https://tmapi.neb.com/), so the aligned primers immediately come with their respective $T_{m}$s.
 
 ## Prerequisites
 Officially Python 3.14 if you know what you are doing, but I suggest installing [uv](https://docs.astral.sh/uv/#installation). It's typically quick and painless.
@@ -21,17 +23,39 @@ The programme takes additional optional arguments:
   * `--top` or `-n`: The top N primers to output into a csv file.
   * `--longest` or `-l`: The of the longest primer of interest.
   * `--shortest` or `-s`: The of the shortest primer of interest.
+  * `--output` or `-o`: The name of the output file, without the extension. E.g. `alignments`
 
 And a flag:
 
   * `--reverse` or `-r`: Whether to reverse and make a complement of the query strand reverse and make the complement of the input as the query (Since copying the complementary strand is annoying in SnapGene). 
 
-Example argument usage: `uv run pralign ACTGACTGACTGACTGACTGACTGACTGACTG --top 20 --longest 18 --shortest 40 --reverse`. Coincidentally, the provided values are the defaults. \
+Example argument usage: 
+```bash
+uv run pralign ACTGACTGACTGACTGACTGACTGACTGACTG \
+--top 20 --longest 18 --shortest 40 \
+--output alignments --reverse
+``` 
+Coincidentally, the provided values are the defaults. \
 If you ever forget these arguments and flags, you can always review them with `uv run pralign -h`. 
 
 ## Notes on usage
-I recommend selecting primers whos `align_score` and `seq_len` are at the worst very close to each other.
+The primers are sorted by the aligned proportion of their sequence, so the most likely fits are at the top. Gapped alignments are excluded from the results.
 
+Finding primers for multiple sequences is relatively easy with a bash script:
+```bash
+#!/usr/bin/bash
+uv run pralign ACTG -o meaningfulAlignmentName1
+uv run pralign ACTG -n 10 -r \
+--output meaningfulReversedAlignmentName2WithN10
+```
+or a powershell script:
+```powershell
+uv run pralign ACTG -o meaningfulAlignmentName1
+uv run pralign ACTG -n 10 -r \
+-o meaningfulReversedAlignmentName2WithN10
+```
 The script is not well-tested. Reach out to me or your favourite AI assistant if something's unclear.
+
+Unfortunately SnapGene primer import is only available with the paid version and the documentation is poor, so I did not make the files importable.
 
 You can save multiple databases in the same directory. The `.xlsx` file chosen as the database is the one that is lexicographically sorted to be the last. So `2026-10-28_Primer.xlsx` will be chosen over `2026-09-28_Primer.xlsx` if that is of any relevance

@@ -63,7 +63,6 @@ def reverse_and_complement(query: str) -> str:
 def align(query: str, seq: str, gap_open: int = 1) -> dict[str, int | str]:
     result = ps.sw_trace(query, seq, gap_open, gap_open, MATRIX)
     aligned_primer = result.traceback.ref
-    print(aligned_primer)
     return {"alignment score": result.score, "aligned portion": aligned_primer}
 
 
