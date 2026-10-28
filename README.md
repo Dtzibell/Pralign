@@ -1,7 +1,7 @@
 # Pralign
 LabGuru primer database searcher. \
 Performs local alignment on a given query sequence against a primer database to find primers that could possibly fit the sequence. \
-The script is linked to the [NEB $T_{m}$ calculator](https://tmcalculator.neb.com/#!/main) via their [$T_{m}$ calculation API](https://tmapi.neb.com/), so the aligned primers immediately come with their respective $T_{m}$s.
+The script is linked to the [NEB Tm calculator](https://tmcalculator.neb.com/#!/main) via their [Tm calculation API](https://tmapi.neb.com/), so the aligned primers immediately come with their respective $T_{m}$s.
 
 ## Prerequisites
 Officially Python 3.14 if you know what you are doing, but I suggest installing [uv](https://docs.astral.sh/uv/#installation). It's typically quick and painless.
@@ -27,7 +27,7 @@ The programme takes additional optional arguments:
 
 And a flag:
 
-  * `--reverse` or `-r`: Whether to reverse and make a complement of the query strand reverse and make the complement of the input as the query (Since copying the complementary strand is annoying in SnapGene). 
+  * `--reverse` or `-r`: Whether to reverse input sequence and make the complement of the input strand the query. (Since copying the complementary strand is annoying in SnapGene) 
 
 Example argument usage: 
 ```bash
