@@ -21,8 +21,8 @@ The output is a file named `alignments.csv` which contains the name, the vial nu
 The programme takes additional optional arguments:
 
   * `--top` or `-n`: The top N primers to output into a csv file.
-  * `--longest` or `-l`: The of the longest primer of interest.
-  * `--shortest` or `-s`: The of the shortest primer of interest.
+  * `--longest` or `-l`: The length of the longest primer of interest.
+  * `--shortest` or `-s`: The length of the shortest primer of interest.
   * `--output` or `-o`: The name of the output file, without the extension. E.g. `alignments`
 
 And a flag:
