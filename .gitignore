@@ -8,8 +8,8 @@ wheels/
 *Primer*
 *~
 **/*~
-alignments.csv
+*.csv
 README.html
-
+*.json
 # Virtual environments
 .venv
