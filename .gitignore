@@ -1,4 +1,4 @@
-# Python-generated files
+n# Python-generated files
 __pycache__/
 *.py[oc]
 build/
@@ -9,6 +9,8 @@ wheels/
 *~
 **/*~
 *.csv
+*.parquet
+.env
 README.html
 *.json
 # Virtual environments
