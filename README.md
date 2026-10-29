@@ -64,5 +64,3 @@ uv run pralign ACTG -n 10 -r \
 The script is not well-tested. Reach out to me or your favourite AI assistant if something's unclear.
 
 Unfortunately SnapGene primer import is only available with the paid version and the documentation is poor, so I did not make the files importable.
-
-You can save multiple databases in the same directory. The `.xlsx` file chosen as the database is the one that is lexicographically sorted to be the last. So `2026-10-28_Primer.xlsx` will be chosen over `2026-09-28_Primer.xlsx` if that is of any relevance
