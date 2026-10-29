@@ -1,11 +1,14 @@
-[primers]
+[query]
 reverse=false
 
-[primers.filter]
+[output]
+filename="alignments"
+
+[output.primers]
+top=20
+
+[filter.primers]
 shortest=17
 longest=40
 
-[primers.output]
-top=20
-filename="alignments"
 

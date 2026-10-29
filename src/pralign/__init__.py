@@ -34,7 +34,7 @@ def align(query: str, seq: str, gap_open: int = 1) -> dict[str, int | str]:
 
 def main() -> None:
     with open("config.toml", "rb") as f:
-        data = tomllib.load(f)["primers"]
+        data = tomllib.load(f)
     ag = argparse.ArgumentParser(
         prog="Pralign",
         description="Find a primer sequence that matches an arbitrarily long query DNA sequence",
@@ -45,25 +45,25 @@ def main() -> None:
         "-r",
         help="Whether to reverse and make a complement of the query strand",
         action="store_true",
-        default=data["reverse"],
+        default=data["query"]["reverse"],
     )
     ag.add_argument(
         "--top",
         "-n",
         help="The top N primers to output into a csv file",
-        default=data["output"]["top"],
+        default=data["output"]["primers"]["top"],
     )
     ag.add_argument(
         "--longest",
         "-l",
         help="The length of the longest primer of interest",
-        default=data["filter"]["longest"],
+        default=data["filter"]["primers"]["longest"],
     )
     ag.add_argument(
         "--shortest",
         "-s",
         help="The length of the shortest primer of interest",
-        default=data["filter"]["shortest"],
+        default=data["filter"]["primers"]["shortest"],
     )
     ag.add_argument(
         "--output",
