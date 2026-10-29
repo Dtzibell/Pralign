@@ -4,6 +4,7 @@ import parasail as ps
 import pathlib
 import argparse
 import re
+import tomllib
 from .api import get_tm_batch_onetaq_stdbuf, get_tm_batch_phusion_hfbuf
 
 # DNA scoring matrix
@@ -32,6 +33,8 @@ def align(query: str, seq: str, gap_open: int = 1) -> dict[str, int | str]:
 
 
 def main() -> None:
+    with open("config.toml", "rb") as f:
+        data = tomllib.load(f)["primers"]
     ag = argparse.ArgumentParser(
         prog="Pralign",
         description="Find a primer sequence that matches an arbitrarily long query DNA sequence",
@@ -42,30 +45,34 @@ def main() -> None:
         "-r",
         help="Whether to reverse and make a complement of the query strand",
         action="store_true",
-        default=False,
+        default=data["reverse"],
     )
     ag.add_argument(
-        "--top", "-n", help="The top N primers to output into a csv file", default=20
+        "--top",
+        "-n",
+        help="The top N primers to output into a csv file",
+        default=data["output"]["top"],
     )
     ag.add_argument(
         "--longest",
         "-l",
         help="The length of the longest primer of interest",
-        default=45,
+        default=data["filter"]["longest"],
     )
     ag.add_argument(
         "--shortest",
         "-s",
         help="The length of the shortest primer of interest",
-        default=18,
+        default=data["filter"]["shortest"],
     )
     ag.add_argument(
         "--output",
         "-o",
         help='The name of the output file, without the extension. E.g. "alignments"',
-        default="alignments",
+        default=data["output"]["filename"],
     )
     namespace = ag.parse_args()
+    print(namespace.reverse)
     query: str = namespace.query.strip().upper()
     if VALID_QUERY.fullmatch(query) is None:
         raise ArgumentError(
@@ -82,7 +89,6 @@ def main() -> None:
 
     if namespace.reverse:
         query = reverse_and_complement(query)
-
     db: pathlib.Path = list(pathlib.Path(".").glob("*Primer*"))[
         -1
     ]  # select the last file in a lexicographically sorted list of primer databases.

@@ -1,0 +1,11 @@
+[primers]
+reverse=false
+
+[primers.filter]
+shortest=17
+longest=40
+
+[primers.output]
+top=20
+filename="alignments"
+

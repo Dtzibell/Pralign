@@ -30,13 +30,17 @@ And a flag:
   * `--reverse` or `-r`: Whether to reverse input sequence and make the complement of the input strand the query. (Since copying the complementary strand is annoying in SnapGene) 
 
 Example argument usage: 
+
 ```bash
 uv run pralign ACTGACTGACTGACTGACTGACTGACTGACTG \
---top 20 --longest 18 --shortest 40 \
+--top 20 --longest 17 --shortest 40 \
 --output alignments --reverse
 ``` 
+
 Coincidentally, the provided values are the defaults. \
 If you ever forget these arguments and flags, you can always review them with `uv run pralign -h`. 
+
+If you would like to change the default parameters, you can modify `config.toml`. Guessing what values are valid typically works out. Refer to [TOML documentation](https://toml.io/en/) if you cannot figure it out.
 
 ## Notes on usage
 The primers are sorted by the aligned proportion of their sequence, so the most likely fits are at the top. Gapped alignments are excluded from the results.
