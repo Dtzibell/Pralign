@@ -11,15 +11,11 @@ Officially Python 3.14 and `pip` if you know what you are doing, but I suggest i
 ## Quick start
 
   * Clone the repository with `git clone https://github.com/Dtzibell/Pralign.git`
-  * Export the primer database from LabGuru: Inventory $\rightarrow$ Primers $\rightarrow$ ... (Meatball menu) $\rightarrow$ Export Sequences.
-  * Move the `.xslx` file to the project's top level directory (where the `pyproject.toml` is located).
+  * Create an `.env` file. Add a line `API_KEY=<insert your API key here>` to the file. To generate an API key, follow LabGuru's [tutorial](https://labguru-support.cenevo.com/hc/en-us/articles/22786313894940-How-to-generate-a-personal-token).
   * Run `uv sync` once to download necessary python libraries
-  * Run `uv run pralign ACTG`, where `ACTG` may be any DNA query that you want to find a primer for.
+  * Run `uv run pralign ACTG -u`, where `ACTG` may be any DNA query that you want to find a primer for, and `-u` tells the script to download the primer database.
 
 The output is a file which contains the name, the vial number, the sequence, the length of the sequence, the score, the proportion of aligned primer and the Tm's for OneTaq 2x MM with Standard Buffer and Phusion with HF buffer PCR reactions.
-
-## Automatic database download
-LabGuru exposes an [API](https://my.labguru.com/api-docs/index.html) for their service, which allows simple database downloads/updates. Instead of exporting the primer database manually, you can create a `.env` file in the project's top-level directory with a line `API_KEY=<insert your API key here>`. To generate an API key, follow their [tutorial](https://labguru-support.cenevo.com/hc/en-us/articles/22786313894940-How-to-generate-a-personal-token).
 
 ## Optional arguments 
 
