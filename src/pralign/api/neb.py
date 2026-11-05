@@ -1,6 +1,6 @@
 import requests as rq
-from typing import Any
 from requests import ConnectionError
+from .api import unnest
 
 # NEB exposes an API
 BASE_URI: str = "https://tmapi.neb.com"
@@ -10,16 +10,7 @@ BASE_URI: str = "https://tmapi.neb.com"
 # CONTENT_TYPE: str = "application/json"  # Content type must be application/json, but requests does it implicitly
 
 
-def unnest(response: dict[str, Any]) -> Any:
-    """Unnests a POST response.
-    :param response: A JSON-like dict.
-    """
-    if isinstance(response, dict) and "data" in response.keys():
-        response = response["data"]
-    return response
-
-
-def batch_request(seqs: list[str], concentration: float, prodcode: str) -> Any:
+def __batch_request(seqs: list[str], concentration: float, prodcode: str) -> Any:
     try:
         return unnest(
             rq.post(
@@ -50,7 +41,8 @@ def get_tm_batch_onetaq_stdbuf(seqs: list[str]) -> Any:
     """
     prodcode = "onetaq-2"
     concentration = 0.2
-    return batch_request(seqs, concentration, prodcode)
+    response = __batch_request(seqs, concentration, prodcode)
+    return response
     # TODO: timeout
 
 
@@ -61,7 +53,7 @@ def get_tm_batch_phusion_hfbuf(seqs: list[str]) -> Any:
     """
     prodcode = "phusion-0"
     concentration = 0.5
-    return batch_request(seqs, concentration, prodcode)
+    return __batch_request(seqs, concentration, prodcode)
 
 
 def __get_NEB_prodcodes():

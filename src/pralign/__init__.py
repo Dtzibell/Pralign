@@ -1,17 +1,18 @@
-from PySide6.QtWidgets import QStyleFactory
+import math
 from typing import Any
-from PySide6 import QtCore, QtWidgets, QtGui
 import sys
-import requests as rq
-from ctypes import ArgumentError
-import polars as pl
-import parasail as ps
 import pathlib
 import argparse
 import re
-import os
 import tomllib
-from .api import get_tm_batch_onetaq_stdbuf, get_tm_batch_phusion_hfbuf
+from ctypes import ArgumentError
+
+from PySide6 import QtCore, QtWidgets, QtGui
+import polars as pl
+
+from .api.neb import get_tm_batch_onetaq_stdbuf, get_tm_batch_phusion_hfbuf
+from .api.labguru import update_db
+from .string_ops import reverse_and_complement, align
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -232,7 +233,7 @@ class DBQueryWidget(QtWidgets.QWidget):
 
 
 def apply_theme(app: QtWidgets.QApplication) -> None:
-    app.setStyle(QStyleFactory.create("Fusion"))
+    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
 
     C = QtGui.QColor
     R = QtGui.QPalette.ColorRole
@@ -363,100 +364,7 @@ def main() -> None:
 
 
 # DNA scoring matrix
-MATRIX = ps.matrix_create("ACGT", 1, -1)
-COMP = str.maketrans("ACGT", "TGCA")
 VALID_QUERY = re.compile("^[ACGT]+$")
-LABGURU = "https://mftuebingen.labguru.com/api/v1/primers"
-
-
-def reverse_and_complement(query: str) -> str:
-    """Makes a complement and reverses the given query sequence.
-    :param query: A query DNA sequence.
-    """
-    return query.translate(COMP)[::-1]
-
-
-# TODO: would it not make sense to make gap_open infinity? Would avoid filtering down the line
-def align(query: str, seq: str, gap_open: int = 1) -> dict[str, int | str]:
-    """Performs Smith-Waterman on the given query and sequence.
-    :param query: DNA sequence 1.
-    :param seq: DNA sequence 2.
-    :param gap_open: penalty for opening and extending a gap.
-    """
-    result = ps.sw_trace(query, seq, gap_open, gap_open, MATRIX)
-    aligned_primer = result.traceback.ref
-    return {"alignment score": result.score, "aligned portion": aligned_primer}
-
-
-def load_dotenv(path=".env"):
-    """Minimal .env loader: KEY=value lines, '#' comments, optional quotes.
-    Real environment variables take precedence over the file."""
-    if not os.path.isfile(path):
-        return
-    with open(path, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, value = line.partition("=")
-            key = key.removeprefix("export ").strip()
-            value = value.strip().strip('"').strip("'")
-            os.environ.setdefault(key, value)
-
-
-def update_db(silent_errors: bool) -> None:
-    print("Updating the database")
-    load_dotenv()
-    token = os.environ.get("API_KEY")
-    if token is None:
-        raise ArgumentError(
-            "Could not find API_KEY in .env, hence updating the database is not possible"
-        )
-    response = True
-    counter = 1
-    df = pl.DataFrame(
-        {"primer name": [], "vial number": [], "sequence": []},
-        schema={
-            "primer name": pl.String,
-            "vial number": pl.String,
-            "sequence": pl.String,
-        },
-    )
-    while response:
-        print(f"Retrieving page {counter}")
-        response = rq.get(
-            f"{LABGURU}",
-            params={
-                "token": token,
-                "content_type": "application/json",
-                "page": counter,
-            },
-        ).json()
-        counter += 1
-        titles = []
-        sequences = []
-        vial_nos = []
-        for primer in response:
-            try:
-                sequences.append(primer["sequences"][0]["seq"])
-                titles.append(primer["title"])
-                vial_nos.append(primer["Vial Number"])
-            except IndexError as e:
-                if not silent_errors:
-                    if hasattr(e, "message"):
-                        print(
-                            f"{e.message}. Likely the primer {primer['title']} contains no sequence"
-                        )
-                    else:
-                        print(
-                            f"{e}. Likely the primer {primer['title']} contains no sequence"
-                        )
-        titles = pl.Series("primer name", titles)
-        vial_nos = pl.Series("vial number", vial_nos)
-        sequences = pl.Series("sequence", sequences)
-        df = pl.concat([df, pl.DataFrame([titles, vial_nos, sequences])])
-    df.write_parquet("database.parquet", compression="zstd", compression_level=22)
-    print(f"Updated the database. Total primers: {df.height}")
 
 
 def parse_query(query: str, reverse: bool) -> str:
@@ -510,10 +418,10 @@ def run(namespace: argparse.Namespace, toml: dict[str, Any]) -> pl.DataFrame:
         )  # performs the alignment
         .unnest("alignment")  # unnests the struct into two separate columns
         .filter(
-            pl.col("aligned portion")
-            .str.contains("-")
-            .not_()
-            .and_(pl.col("alignment score") > 15)
+            # Technically NEB allows 3 mismatches, but SnapGene only allows 1
+            (pl.col("aligned portion").str.split("N").list.len() < 3).and_(
+                pl.col("alignment score") > 16
+            )
         )  # filters out gapped and insufficient alignments. TODO: introduce a toml for params? Overkill?
         .sort(by="alignment score", descending=True)
         .with_columns(
