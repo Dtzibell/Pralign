@@ -1,5 +1,6 @@
 import requests as rq
 from typing import Any
+from requests import ConnectionError
 
 # NEB exposes an API
 BASE_URI: str = "https://tmapi.neb.com"
@@ -18,6 +19,27 @@ def unnest(response: dict[str, Any]) -> Any:
     return response
 
 
+def batch_request(seqs: list[str], concentration: float, prodcode: str) -> Any:
+    try:
+        return unnest(
+            rq.post(
+                f"{BASE_URI}/tm/batch/",
+                json={
+                    "seqpairs": [
+                        [seq] for seq in seqs
+                    ],  # seqpairs is a nested list, because it could take [seq1, seq2]
+                    "conc": 0.2,  # OneTaq protocol suggests 0.2 uM conc
+                    "prodcode": "onetaq-2",
+                },
+                timeout=1,
+            ).json()
+        )
+    except ConnectionError as e:
+        # print(f"Caught exception {type(e).__name__}: {e}")
+        lst = [{"tm1": None} for _ in seqs]
+        return lst
+
+
 # prodcodes:
 # onetaq 2x std buf: onetaq-2
 # phusion with HF buf: phusion-0
@@ -26,17 +48,10 @@ def get_tm_batch_onetaq_stdbuf(seqs: list[str]) -> Any:
     :param seqs: A list of sequences.
     :returns: Presumably a list of dictionaries containing information about each sequence, but should be verified.
     """
-    r = rq.post(
-        f"{BASE_URI}/tm/batch/",
-        json={
-            "seqpairs": [
-                [seq] for seq in seqs
-            ],  # seqpairs is a nested list, because it could take [seq1, seq2]
-            "conc": 0.2,  # OneTaq protocol suggests 0.2 uM conc
-            "prodcode": "onetaq-2",
-        },
-    )
-    return unnest(r.json())
+    prodcode = "onetaq-2"
+    concentration = 0.2
+    return batch_request(seqs, concentration, prodcode)
+    # TODO: timeout
 
 
 def get_tm_batch_phusion_hfbuf(seqs: list[str]) -> Any:
@@ -44,15 +59,9 @@ def get_tm_batch_phusion_hfbuf(seqs: list[str]) -> Any:
     :param seqs: A list of sequences.
     :returns: Presumably a list of dictionaries containing information about each sequence, but should be verified.
     """
-    r = rq.post(
-        f"{BASE_URI}/tm/batch/",
-        json={
-            "seqpairs": [[seq] for seq in seqs],
-            "conc": 0.5,  # Phusion protocol suggests 0.5 uM conc
-            "prodcode": "phusion-0",
-        },
-    )
-    return unnest(r.json())
+    prodcode = "phusion-0"
+    concentration = 0.5
+    return batch_request(seqs, concentration, prodcode)
 
 
 def __get_NEB_prodcodes():

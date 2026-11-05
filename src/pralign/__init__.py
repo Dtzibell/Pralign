@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLayout, QStyleFactory
+from PySide6.QtWidgets import QStyleFactory
 from typing import Any
 from PySide6 import QtCore, QtWidgets, QtGui
 import sys
@@ -302,13 +302,62 @@ QHeaderView::section {
 
 
 def main() -> None:
-    app = QtWidgets.QApplication([])
-    apply_theme(app)
-    # app.setStyleSheet(STYLE)
+    if len(sys.argv) > 1:
+        print(f"Running pralign with args: {sys.argv}")
+        with open("config.toml", "rb") as f:
+            toml = tomllib.load(f)
+        argp = argparse.ArgumentParser(
+            prog="Pralign",
+            description="Find a primer sequence that matches an arbitrarily long query DNA sequence",
+        )
+        argp.add_argument("query")
+        argp.add_argument(
+            "--update",
+            "-u",
+            help="Whether to update the existing database",
+            action="store_true",
+            default=toml["database"]["update"],
+        )
+        argp.add_argument(
+            "--reverse",
+            "-r",
+            help="Whether to reverse and make a complement of the query strand",
+            action="store_true",
+            default=toml["query"]["reverse"],
+        )
+        argp.add_argument(
+            "--top",
+            "-n",
+            help="The top N primers to output into a csv file",
+            default=toml["output"]["primers"]["top"],
+        )
+        argp.add_argument(
+            "--longest",
+            "-l",
+            help="The length of the longest primer of interest",
+            default=toml["filter"]["primers"]["longest"],
+        )
+        argp.add_argument(
+            "--shortest",
+            "-s",
+            help="The length of the shortest primer of interest",
+            default=toml["filter"]["primers"]["shortest"],
+        )
+        argp.add_argument(
+            "--output",
+            "-o",
+            help='The name of the output file, without the extension. E.g. "alignments"',
+            default=toml["output"]["filename"],
+        )
+        namespace = argp.parse_args()
+        run(namespace, toml)
+        sys.exit(1)
+    else:
+        app = QtWidgets.QApplication([])
+        apply_theme(app)
 
-    main_window = MainWindow()
-    # main_window.resize(900, 560)
-    main_window.show()
+        main_window = MainWindow()
+        main_window.show()
 
     sys.exit(app.exec())
 
