@@ -6,18 +6,18 @@ Pralign is integrated with the LabGuru API, so updating the primer database is q
 Additionally, the script is linked to the [NEB Tm calculator](https://tmcalculator.neb.com/#!/main) via their [Tm calculation API](https://tmapi.neb.com/), so the aligned primers immediately come with their respective Tm's.
 
 ## Prerequisites
-Officially Python 3.14 and `pip` if you know what you are doing, but I suggest installing [uv](https://docs.astral.sh/uv/#installation). It's typically quick and painless.
+I suggest installing [uv](https://docs.astral.sh/uv/#installation). It's typically quick and painless.
 
 ## Quick start
 
   * Clone the repository with `git clone https://github.com/Dtzibell/Pralign.git`
   * Create an `.env` file. Add a line `API_KEY=<insert your API key here>` to the file. To generate an API key, follow LabGuru's [tutorial](https://labguru-support.cenevo.com/hc/en-us/articles/22786313894940-How-to-generate-a-personal-token).
-  * Run `uv sync` once to download necessary python libraries
-  * Run `uv run pralign ACTG -u`, where `ACTG` may be any DNA query that you want to find a primer for, and `-u` tells the script to download the primer database.
+  * Run `uv run pralign`. 
+  
+This opens a GUI, with which you can perform database search. Update your database, enter your sequence into the bottom left and press "Align"!
 
-The output is a file which contains the name, the vial number, the sequence, the length of the sequence, the score, the proportion of aligned primer and the Tm's for OneTaq 2x MM with Standard Buffer and Phusion with HF buffer PCR reactions.
-
-## Optional arguments 
+## Command line interface
+The programme also support a command line interface. A minimal command is `uv run pralign <query-sequence>`.
 
 The programme takes additional optional arguments:
 
@@ -45,21 +45,13 @@ If you ever forget these arguments and flags, you can always review them with `u
 If you would like to change the default parameters, you can modify `config.toml`. The format is quite intuitive, but refer to [TOML documentation](https://toml.io/en/) if you crash due to invalid values.
 
 ## Notes on usage
-The primers are sorted by the aligned proportion of their sequence, so the most likely fits are at the top. Gapped alignments are excluded from the results.
+The primers are sorted by the aligned proportion of their sequence, so the most likely fits are at the top. The programme allows at most one gap, which is then replaced by an N in the $T_{m}$ calculation.
 
-Finding primers for multiple sequences is relatively easy with a bash script:
+Finding primers for multiple sequences is relatively easy with a script:
 ```bash
-#!/usr/bin/bash
 uv run pralign ACTG -o meaningfulAlignmentName1
 uv run pralign ACTG -n 10 -r \
 --output meaningfulReversedAlignmentName2WithN10
-```
-or a powershell script:
-```powershell
-uv run pralign ACTG -o meaningfulAlignmentName1
-uv run pralign ACTG -n 10 -r \
--o meaningfulReversedAlignmentName2WithN10
-```
 
 The script is not well-tested. Reach out to me or your favourite AI assistant if something's unclear.
 
